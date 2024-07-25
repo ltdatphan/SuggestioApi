@@ -1,13 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using SuggestioApi.Dtos.CuratedList;
+using System.ComponentModel.DataAnnotations;
 
-namespace SuggestioApi.Helpers
+namespace SuggestioApi.Helpers;
+
+public class ListQueryObject
 {
-    public class ListQueryObject
-    {
-        public bool WithItems { get; set; } = false;
-    }
+    [AllowedValues(["public", "private"])] public string? Access { get; set; } = null;
+
+    [AllowedValues(["Title", "CreatedAt", "UpdatedAt", "ItemCount"])]
+    public string? SortBy { get; set; } = null; //Key used to sort 
+
+    public bool IsDescending { get; set; } = false;
+
+    [Range(1, int.MaxValue, ErrorMessage = "Page number must be greater than 0.")]
+    public int PageNumber { get; set; } = 1;
+
+    [Range(1, 20, ErrorMessage = "Page size must be between 1 and 20.")]
+    public int PageSize { get; set; } = 20; //20 items per page
 }

@@ -1,169 +1,168 @@
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SuggestioApi.Data;
+using Microsoft.AspNetCore.RateLimiting;
 using SuggestioApi.Dtos.CuratedList;
+using SuggestioApi.Dtos.Item;
+using SuggestioApi.Dtos.Paginated;
 using SuggestioApi.Helpers;
 using SuggestioApi.Interfaces;
 using SuggestioApi.Mappers;
 
-namespace SuggestioApi.Controllers
+namespace SuggestioApi.Controllers;
+
+[EnableRateLimiting("fixed")]
+[Route("api/lists")]
+[ApiController]
+public class ListController : ControllerBase
 {
-    [Route("api/lists")]
-    [ApiController]
-    public class ListController : ControllerBase
+    private readonly ICuratedListRepository _curatedListRepo;
+    private readonly IItemRepository _itemRepo;
+
+    public ListController(ICuratedListRepository listRepo, IItemRepository itemRepo)
     {
-        // private readonly ApplicationDBContext _context;
-        private readonly ICuratedListRepository _curatedListRepo;
-        public ListController(ICuratedListRepository listRepo)
-        {
-            // _context = context;
-            _curatedListRepo = listRepo;
-        }
+        _curatedListRepo = listRepo;
+        _itemRepo = itemRepo;
+    }
 
-        // TODO: REMOVE THIS
-        // [Authorize]
-        // [HttpGet("lists")]
-        // public async Task<IActionResult> GetAll([FromQuery] QueryObject queryObject)
-        // {
-        //     if (!ModelState.IsValid)
-        //         return BadRequest(ModelState);
+    // Only the list info
+    [Authorize]
+    [HttpGet("{listId:int}")]
+    public async Task<IActionResult> GetListById([FromRoute] int listId)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-        //     var listModels = await _curatedListRepo.GetAllAsync(queryObject);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        //     return Ok(listModels.Select(l => l.ToListDto()));
-        // }
+        if (userId == null)
+            return Unauthorized("You do not have permission to view this list.");
 
-        [Authorize]
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetListById([FromRoute] int id, [FromQuery] ListQueryObject listQueryObject)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        var listModel = await _curatedListRepo.ReadListByIdAsync(listId);
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (listModel == null) return NotFound("List not found or you do not have permission to view it.");
 
-            if (userId == null)
-                return Unauthorized("You do not have permission to view this list.");
+        var isOwner = listModel.OwnerId == userId;
 
-            // Check if current list is owned by user or if user has permission to view list
-            var isListBelongToOwner = await _curatedListRepo.ListBelongsToOwner(id, userId);
-            var canUserViewList = await _curatedListRepo.CanUserViewList(id, userId);
+        //If another user tries to view private list
+        if (!isOwner && !listModel.IsPublic)
+            return NotFound("List not found or you do not have permission to view it.");
 
-            if (!isListBelongToOwner && !canUserViewList)
-                return Unauthorized("You do not have permission to view this list.");
-
-            var list = await _curatedListRepo.GetByIdAsync(id, listQueryObject);
-            if (list == null)
-            {
-                return NotFound();
-            }
-
-            if (listQueryObject.WithItems)
-                return Ok(list.ToCuratedListWithItemsDto());
-
-            else
-                return Ok(list.ToListDto());
-        }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetCurrentUserLists()
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return Unauthorized("You do not have permission to view this list.");
-
-            var list = await _curatedListRepo.GetAllByOwnerIdAsync(userId);
-            return Ok(list.Select(l => l.ToBasicListDto()));
-        }
-
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> CreateList([FromBody] CreateCuratedListRequestDto createDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return Unauthorized("You do not have permission to create a list.");
-
-            var listModel = createDto.ToListFromCreateDto(userId);
-            await _curatedListRepo.CreateAsync(listModel);
-            return CreatedAtAction(nameof(GetListById), new { id = listModel.Id }, listModel.ToListDto());
-        }
-
-        [Authorize]
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateList([FromRoute] int id, [FromBody] UpdateCuratedListRequestDto updateDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            //Check for current user in claims
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return Unauthorized("You do not have permission to edit this list.");
-
-            // Check if current list belongs to owner
-            var isListBelongToOwner = await _curatedListRepo.ListBelongsToOwner(id, userId);
-
-            if (!isListBelongToOwner)
-                return Unauthorized("You do not have permission to edit this list.");
-
-            // Perform the update
-            var listModel = await _curatedListRepo.UpdateAsync(id, updateDto.ToListFromUpdateDto());
-
-            if (listModel == null)
-            {
-                return NotFound();
-            }
-
+        // Return data for owner
+        if (isOwner)
             return Ok(listModel.ToListDto());
-        }
+        return Ok(listModel.ToListPublicDto());
+    }
 
-        [Authorize]
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteList([FromRoute] int id)
+    [Authorize]
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchList([FromQuery] ListsSearchQueryObject listsSearchQueryObject,
+        [FromQuery] ListQueryObject listQueryObject)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var paginatedListsPublicDto =
+            await _curatedListRepo.SearchListsAsync(listsSearchQueryObject.Query, listQueryObject);
+
+        return Ok(paginatedListsPublicDto);
+    }
+
+
+    [Authorize]
+    [HttpGet("{listId:int}/items")]
+    public async Task<IActionResult> GetListItemsByListId([FromRoute] int listId,
+        [FromQuery] ItemQueryObject itemQueryObject)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        //Check for current user in claims
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return Unauthorized("You do not have permission to view this list.");
+
+        var (listModel, paginatedRawItem) = await _itemRepo.ReadListItemsByListIdAsync(listId, userId, itemQueryObject);
+
+        if (listModel == null) return NotFound("List not found or you do not have permission to view it.");
+
+        var isOwner = listModel.OwnerId == userId;
+
+        if (!isOwner && !listModel.IsPublic)
+            return NotFound("List not found or you do not have permission to view it.");
+
+        if (isOwner)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            //Check for current user in claims
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return Unauthorized("You do not have permission to delete this list.");
-
-            // Check if current list belongs to owner
-            var isListBelongToOwner = await _curatedListRepo.ListBelongsToOwner(id, userId);
-
-            if (!isListBelongToOwner)
-                return Unauthorized("You do not have permission to delete this list.");
-
-            // Perform the delete
-            var listModel = await _curatedListRepo.DeleteAsync(id);
-
-            if (listModel == null)
+            var paginatedItems = new PaginatedItemsDto
             {
-                return NotFound();
-            }
+                Items = paginatedRawItem.Items.Select(i => i.ToItemDto()).ToList(),
+                PageNumber = paginatedRawItem.PageNumber,
+                PageSize = paginatedRawItem.PageSize,
+                TotalItems = paginatedRawItem.TotalItems
+            };
 
-            return NoContent();
+            return Ok(paginatedItems);
         }
+
+        var paginatedPublicItems = new PaginatedItemsPublicDto
+        {
+            Items = paginatedRawItem.Items.Select(i => i.ToItemPublicDto()).ToList(),
+            PageNumber = paginatedRawItem.PageNumber,
+            PageSize = paginatedRawItem.PageSize,
+            TotalItems = paginatedRawItem.TotalItems
+        };
+        return Ok(paginatedPublicItems);
+    }
+
+    [Authorize(Policy = "ListOwner")]
+    //[ValidateAntiForgeryToken]
+    [HttpPut("{listId:int}")]
+    public async Task<IActionResult> UpdateList([FromRoute] int listId,
+        [FromBody] UpdateCuratedListRequestDto updateDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // Perform the update if the user is the owner
+        var listModel = await _curatedListRepo.UpdateListAsync(listId, updateDto.ToListFromUpdateDto());
+
+        if (listModel == null) return NotFound("List not found or you do not have permission to edit it.");
+
+        return Ok(listModel.ToListDto());
+    }
+
+    [Authorize(Policy = "ListOwner")]
+    //[ValidateAntiForgeryToken]
+    [HttpDelete("{listId:int}")]
+    public async Task<IActionResult> DeleteList([FromRoute] int listId)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // Perform the delete
+        var listModel = await _curatedListRepo.DeleteListAsync(listId);
+
+        if (listModel == null) return NotFound("List not found.");
+
+        return NoContent();
+    }
+
+    [Authorize(Policy = "ListOwner")]
+    //[ValidateAntiForgeryToken]
+    [HttpPost("{listId:int}/items")]
+    public async Task<IActionResult> AddItemToList([FromRoute] int listId, [FromBody] CreateItemRequestDto createDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        //Perform action
+        var itemModel = createDto.ToItemFromCreateDto(listId);
+        var resultItemModel = await _itemRepo.CreateItemAsync(itemModel, listId);
+
+        if (resultItemModel == null)
+            return NotFound("List not found or you do not have permission to add items to it.");
+
+        return Ok(resultItemModel.ToItemDto());
     }
 }

@@ -15,5 +15,5 @@ public class Item
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     //Navigation Property
-    public CuratedList CuratedList { get; set; }
+    public CuratedList CuratedList { get; set; } = null!;
 }

@@ -1,23 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using SuggestioApi.Dtos.CuratedList;
+using SuggestioApi.Dtos.Paginated;
 using SuggestioApi.Helpers;
 using SuggestioApi.Models;
 
-namespace SuggestioApi.Interfaces
+namespace SuggestioApi.Interfaces;
+
+public interface ICuratedListRepository
 {
-    public interface ICuratedListRepository
-    {
-        Task<List<CuratedList>> GetAllAsync(QueryObject queryObject);
-        Task<List<CuratedList>> GetAllByOwnerIdAsync(string ownerId);
-        Task<CuratedList?> GetByIdAsync(int id, ListQueryObject listQueryObject); //First or default
-        Task<CuratedList> CreateAsync(CuratedList curatedListModel);
-        Task<CuratedList?> UpdateAsync(int id, CuratedList curatedListModel);
-        Task<CuratedList?> DeleteAsync(int id);
-        Task<bool> ListExist(int id);
-        Task<bool> ListBelongsToOwner(int listId, string ownerId);
-        Task<bool> CanUserViewList(int listId, string userId);
-    }
+    Task<PaginatedListsDto> ReadUserListsPaginatedAsync(string userId, ListQueryObject listsQueryObject);
+    Task<PaginatedListsPublicDto> ReadUserPublicListsAsync(string userId, ListQueryObject listsQueryObject);
+    Task<CuratedList?> ReadListByIdAsync(int id);
+    Task<CuratedList?> ReadListWithItemsByIdAsync(int id);
+    Task<CuratedList> CreateListAsync(CuratedList curatedListModel);
+    Task<CuratedList?> UpdateListAsync(int id, CuratedList curatedListModel);
+    Task<CuratedList?> DeleteListAsync(int id);
+    Task<PaginatedListsPublicDto> ReadFollowingsListsAsync(string userId, ListQueryObject listsQueryObject);
+    Task<PaginatedListsPublicDto> SearchListsAsync(string query, ListQueryObject listsQueryObject);
 }

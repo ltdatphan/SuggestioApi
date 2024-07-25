@@ -1,20 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using SuggestioApi.Dtos.Item;
+using SuggestioApi.Dtos.Paginated;
+using SuggestioApi.Helpers;
 using SuggestioApi.Models;
 
-namespace SuggestioApi.Interfaces
+namespace SuggestioApi.Interfaces;
+
+public interface IItemRepository
 {
-    public interface IItemRepository
-    {
-        Task<List<Item>> GetAllAsync();
-        Task<List<Item>> GetAllItemByListIdAsync(int listId);
-        Task<Item?> GetByIdAsync(int id); //First or default
-        Task<Item> CreateAsync(Item itemModel); //Add item to list
-        Task<Item?> UpdateAsync(int id, Item itemModel);
-        Task<Item?> DeleteAsync(int id);
-        Task<bool> IsItemOwnedByUser(int itemId, string ownerId);
-    }
+    Task<Item?> CreateItemAsync(Item itemModel, int listId); //Add item to list
+    Task<Item?> ReadItemByIdAsync(int id);
+
+    Task<(CuratedList?, PaginatedRawItems)> ReadListItemsByListIdAsync(int listId, string userId,
+        ItemQueryObject itemQueryObject);
+
+    // Task<PaginatedItemsDto> ReadUserListItemsByListIdAsync(int listId, string userId);
+    // Task<PaginatedItemsPublicDto> ReadPublicListItemsByListIdAsync(int listId, string userId);
+    Task<Item?> UpdateItemByIdAsync(int id, Item itemModel);
+    Task<Item?> DeleteItemByIdAsync(int id);
 }

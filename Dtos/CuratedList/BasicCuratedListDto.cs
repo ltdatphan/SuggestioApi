@@ -1,23 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using SuggestioApi.Dtos.Item;
+namespace SuggestioApi.Dtos.CuratedList;
 
-namespace SuggestioApi.Dtos.CuratedList
+//Similar to CuratedListDto but with less info
+public class BasicCuratedListDto
 {
-    //Similar to CuratedListDto but with less info
-    public class BasicCuratedListDto
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        // public string? Subtitle { get; set; }
-        // public string OwnerId { get; set; }
-        public bool IsPublic { get; set; } = false;
-        // public string ListType { get; set; } = string.Empty;
-        public string? CoverImgUrl { get; set; }
-        // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        // public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        // public List<ItemDto> ListItems { get; set; } = new List<ItemDto>();
-    }
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public bool IsPublic { get; set; } = false;
+    public string? CoverImgUrl { get; set; }
+    public int ItemCount { get; set; } = 0;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

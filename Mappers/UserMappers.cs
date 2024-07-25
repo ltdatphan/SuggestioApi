@@ -1,73 +1,68 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using SuggestioApi.Dtos.User;
 using SuggestioApi.Helpers.CustomReturns;
 using SuggestioApi.Models;
 
-namespace SuggestioApi.Mappers
+namespace SuggestioApi.Mappers;
+
+public static class UserMappers
 {
-    public static class UserMappers
+    public static UserDto ToUserDto(this User user)
     {
-        public static UserDto ToUserDto(this User user)
+        return new UserDto
         {
-            return new UserDto
-            {
-                Id = user.Id,
-                Username = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                ProfileImgUrl = user.ProfileImgUrl
-            };
-        }
+            Id = user.Id,
+            Username = user.UserName!,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImgUrl = user.ProfileImgUrl
+        };
+    }
 
-        public static UserWithListDto ToUserWithListDto(this User user, bool isFollowing)
+    public static UserWithListDto ToUserWithListDto(this User user, bool isFollowing)
+    {
+        return new UserWithListDto
         {
-            return new UserWithListDto
-            {
-                Id = user.Id,
-                Username = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                ProfileImgUrl = user.ProfileImgUrl,
-                IsFollowing = isFollowing,
-                UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList(),
-            };
-        }
+            Id = user.Id,
+            Username = user.UserName!,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImgUrl = user.ProfileImgUrl,
+            IsFollowing = isFollowing,
+            UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList()
+        };
+    }
 
-        public static UserProfileDto ToUserProfileDto(this User user, UserRelationship relationship)
+    public static UserProfilePublicDto ToUserProfilePublicDto(this User user, UserRelationship relationship)
+    {
+        return new UserProfilePublicDto
         {
-            return new UserProfileDto
-            {
-                Id = user.Id,
-                Username = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                ProfileImgUrl = user.ProfileImgUrl,
-                IsFollowedByCurrentUser = relationship.IsFollowedByCurrentUser,
-                IsFollowingCurrentUser = relationship.IsFollowingCurrentUser,
-                FollowersCount = user.FollowersCount,
-                FollowingsCount = user.FollowingsCount,
-                UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList(),
-            };
-        }
+            Id = user.Id,
+            Username = user.UserName!,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImgUrl = user.ProfileImgUrl,
+            IsFollowedByCurrentUser = relationship.IsFollowedByCurrentUser,
+            IsFollowingCurrentUser = relationship.IsFollowingCurrentUser,
+            FollowersCount = user.FollowersCount,
+            FollowingsCount = user.FollowingsCount,
+            ListCount = user.CuratedLists.Where(l => l.IsPublic).ToList().Count
+            // UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList(),
+        };
+    }
 
-        public static UserProfileDto ToUserProfileDto(this User user)
+    public static UserProfileDto ToUserProfileDto(this User user)
+    {
+        return new UserProfileDto
         {
-            return new UserProfileDto
-            {
-                Id = user.Id,
-                Username = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                ProfileImgUrl = user.ProfileImgUrl,
-                IsFollowedByCurrentUser = null,
-                IsFollowingCurrentUser = null,
-                FollowersCount = user.FollowersCount,
-                FollowingsCount = user.FollowingsCount,
-                UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList(),
-            };
-        }
+            Id = user.Id,
+            Username = user.UserName!,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ProfileImgUrl = user.ProfileImgUrl,
+            FollowersCount = user.FollowersCount,
+            FollowingsCount = user.FollowingsCount,
+            ListCount = user.CuratedLists.Count
+            // UserLists = user.CuratedLists.Select(l => l.ToBasicListDto()).ToList(),
+        };
     }
 }
