@@ -7,13 +7,14 @@ using SuggestioApi.RequestPipeline;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+var environment = builder.Environment;
 configuration.AddEnvironmentVariables();
 
 builder.Services
     .AddCorsConfig(configuration)
     .AddServices()
     .AddSwagger()
-    .AddPersistence(configuration)
+    .AddPersistence(configuration, environment)
     .AddUserIdentity()
     .AddAuth(configuration)
     .AddExceptions();
