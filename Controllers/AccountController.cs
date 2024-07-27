@@ -33,9 +33,6 @@ public class AccountController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] AuthRequestDto loginDto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username);
 
         if (user == null)
@@ -100,9 +97,6 @@ public class AccountController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var user = new User
             {
                 UserName = registerDto.Username!,
@@ -169,7 +163,6 @@ public class AccountController : ControllerBase
 
     //TODO: fix this so that it works when access token expires
     [HttpPost("refresh-token")]
-    //[ValidateAntiForgeryToken]
     public async Task<IActionResult> RefreshToken()
     {
         //Every time this route is use, we revoke the currently active refresh token

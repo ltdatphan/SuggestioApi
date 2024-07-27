@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="EFCore.CheckConstraints" Version="8.0.1"/>
-        <PackageReference Include="HtmlSanitizer" Version="8.0.865" />
+        <PackageReference Include="HtmlSanitizer" Version="8.0.865"/>
         <PackageReference Include="Microsoft.AspNetCore.Antiforgery" Version="2.2.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6"/>
         <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0"/>
@@ -30,6 +30,14 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="SharedKernel\Result.cs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Validations\" />
     </ItemGroup>
 
 </Project>

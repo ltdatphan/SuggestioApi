@@ -12,7 +12,6 @@ public class ListOwnerHandler : AuthorizationHandler<ListOwnerRequirement>
     public ListOwnerHandler(ApplicationDBContext context)
     {
         _context = context;
-        ;
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,

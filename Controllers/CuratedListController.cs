@@ -116,7 +116,6 @@ public class ListController : ControllerBase
     }
 
     [Authorize(Policy = "ListOwner")]
-    //[ValidateAntiForgeryToken]
     [HttpPut("{listId:int}")]
     public async Task<IActionResult> UpdateList([FromRoute] int listId,
         [FromBody] UpdateCuratedListRequestDto updateDto)
@@ -133,7 +132,6 @@ public class ListController : ControllerBase
     }
 
     [Authorize(Policy = "ListOwner")]
-    //[ValidateAntiForgeryToken]
     [HttpDelete("{listId:int}")]
     public async Task<IActionResult> DeleteList([FromRoute] int listId)
     {
@@ -149,7 +147,6 @@ public class ListController : ControllerBase
     }
 
     [Authorize(Policy = "ListOwner")]
-    //[ValidateAntiForgeryToken]
     [HttpPost("{listId:int}/items")]
     public async Task<IActionResult> AddItemToList([FromRoute] int listId, [FromBody] CreateItemRequestDto createDto)
     {
