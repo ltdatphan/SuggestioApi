@@ -78,7 +78,7 @@ public class AccountController : ControllerBase
         {
             HttpOnly = false,
             Secure = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.None
         };
         Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
@@ -133,7 +133,7 @@ public class AccountController : ControllerBase
                     {
                         HttpOnly = false,
                         Secure = true,
-                        SameSite = SameSiteMode.Lax
+                        SameSite = SameSiteMode.None
                     };
                     Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
@@ -212,7 +212,7 @@ public class AccountController : ControllerBase
         {
             HttpOnly = false,
             Secure = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.None
         };
         Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
