@@ -78,7 +78,8 @@ public class AccountController : ControllerBase
         {
             HttpOnly = false,
             Secure = true,
-            SameSite = SameSiteMode.None
+            SameSite = SameSiteMode.None,
+            Path = "/; samesite=None; Partitioned"
         };
         Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
@@ -133,7 +134,8 @@ public class AccountController : ControllerBase
                     {
                         HttpOnly = false,
                         Secure = true,
-                        SameSite = SameSiteMode.None
+                        SameSite = SameSiteMode.None,
+                        Path = "/; samesite=None; Partitioned"
                     };
                     Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
@@ -212,7 +214,8 @@ public class AccountController : ControllerBase
         {
             HttpOnly = false,
             Secure = true,
-            SameSite = SameSiteMode.None
+            SameSite = SameSiteMode.None,
+            Path = "/; samesite=None; Partitioned"
         };
         Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
 
@@ -275,7 +278,8 @@ public class AccountController : ControllerBase
             Secure = true,
             IsEssential = true,
             SameSite = SameSiteMode.None,
-            Expires = expires
+            Expires = expires,
+            Path = "/; samesite=None; Partitioned"
         };
         Response.Cookies.Append(key, token, cookieOptions);
     }
