@@ -17,6 +17,7 @@ builder.Services
     .AddPersistence(configuration, environment)
     .AddUserIdentity()
     .AddAuth(configuration)
+    .ConfigureCookiePolicy(configuration)
     .AddExceptions();
 
 builder.Services.AddControllers()
@@ -53,6 +54,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseCsrfMiddleware();
 app.UseExceptionHandler();
+app.UseCookiePolicy();
 app.MapControllers();
 app.MapFallback(context =>
 {

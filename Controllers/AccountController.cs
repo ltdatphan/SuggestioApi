@@ -69,19 +69,10 @@ public class AccountController : ControllerBase
             return StatusCode(500);
 
         var jwtToken = _tokenService.CreateToken(user);
-
-        setTokenCookie("accessToken", jwtToken);
-        setTokenCookie("refreshToken", refreshToken.Token);
-
         var csrfToken = _tokenService.GenerateCsrfToken();
-        var csrfCookieOptions = new CookieOptions
-        {
-            HttpOnly = false,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Path = "/; samesite=None; Partitioned"
-        };
-        Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
+        SetCookie("accessToken", jwtToken);
+        SetCookie("refreshToken", refreshToken.Token);
+        SetCookie("CSRF-TOKEN", csrfToken);
 
         return Ok(new AuthResponseDto
         {
@@ -127,17 +118,10 @@ public class AccountController : ControllerBase
                         return StatusCode(500);
 
                     var jwtToken = _tokenService.CreateToken(user);
-                    setTokenCookie("accessToken", jwtToken);
-                    setTokenCookie("refreshToken", refreshToken.Token);
                     var csrfToken = _tokenService.GenerateCsrfToken();
-                    var csrfCookieOptions = new CookieOptions
-                    {
-                        HttpOnly = false,
-                        Secure = true,
-                        SameSite = SameSiteMode.None,
-                        Path = "/; samesite=None; Partitioned"
-                    };
-                    Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
+                    SetCookie("accessToken", jwtToken);
+                    SetCookie("refreshToken", refreshToken.Token);
+                    SetCookie("CSRF-TOKEN", csrfToken);
 
                     // =============================
                     return Ok(
@@ -206,18 +190,10 @@ public class AccountController : ControllerBase
 
         //Generate new refresh token
         var jwtToken = _tokenService.CreateToken(user);
-        setTokenCookie("accessToken", jwtToken);
-        setTokenCookie("refreshToken", newRefreshToken.Token);
-
         var csrfToken = _tokenService.GenerateCsrfToken();
-        var csrfCookieOptions = new CookieOptions
-        {
-            HttpOnly = false,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Path = "/; samesite=None; Partitioned"
-        };
-        Response.Cookies.Append("CSRF-TOKEN", csrfToken, csrfCookieOptions);
+        SetCookie("accessToken", jwtToken);
+        SetCookie("refreshToken", newRefreshToken.Token);
+        SetCookie("CSRF-TOKEN", csrfToken);
 
         return Ok(
             new AuthResponseDto
@@ -256,8 +232,9 @@ public class AccountController : ControllerBase
 
         await _tokenRepo.RevokeToken(user, targetRefreshToken, ipAddress);
 
-        Response.Cookies.Delete("refreshToken");
-        Response.Cookies.Delete("CSRF-TOKEN");
+        RemoveCookie("accessToken");
+         RemoveCookie("refreshToken");
+         RemoveCookie("CSRF-TOKEN");
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -265,23 +242,46 @@ public class AccountController : ControllerBase
     }
 
     //Private helper functions
-    private void setTokenCookie(string key, string token)
+    private void SetCookie(string key, string token)
     {
-        // append cookie with refresh token to the http response
-        var expires = key == "refreshToken"
-            ? DateTime.UtcNow.AddDays(7)
-            : DateTime.UtcNow.AddMinutes(15);
+        DateTimeOffset? expires = null;
+        switch (key)
+        {
+            case "refreshToken":
+                // Refresh tokens last for 7 days
+                expires = DateTime.UtcNow.AddDays(7);
+                break;
+            case "accessToken":
+                // Access tokens last for 15 minutes
+                expires = DateTime.UtcNow.AddMinutes(15);
+                break;
+            default:
+                expires = null;
+                break;
+        }
 
         var cookieOptions = new CookieOptions
         {
-            HttpOnly = true,
+            HttpOnly = key == "refreshToken" || key == "accessToken",
             Secure = true,
-            IsEssential = true,
-            SameSite = SameSiteMode.None,
-            Expires = expires,
-            Path = "/; samesite=None; Partitioned"
+            SameSite = SameSiteMode.Lax,
+            Expires = expires
+            // Domain = ".suggestio.local"
         };
         Response.Cookies.Append(key, token, cookieOptions);
+    }
+
+    private void RemoveCookie(string key)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = key == "refreshToken" || key == "accessToken",
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddDays(-1) // Expire the cookie immediately
+        };
+
+        Response.Cookies.Append(key, string.Empty, cookieOptions);
     }
 
     private string? GetIpAddress()

@@ -4,7 +4,7 @@ namespace SuggestioApi.Helpers;
 
 public class UserQueryObject
 {
-    [AllowedValues(["FirstName", "Username"])]
+    [QueryObjectValidation.AllowedValues(["FirstName", "Username"])]
     public string? SortBy { get; set; } = "Username"; //Key used to sort 
 
     public bool IsDescending { get; set; } = false;

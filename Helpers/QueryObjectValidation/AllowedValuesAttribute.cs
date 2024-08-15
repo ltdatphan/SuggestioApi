@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace SuggestioApi.Helpers.QueryObjectValidation;
+
 public class AllowedValuesAttribute : ValidationAttribute
 {
     private readonly List<string> _allowedValues;

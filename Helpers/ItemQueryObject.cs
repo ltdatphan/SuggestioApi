@@ -4,7 +4,7 @@ namespace SuggestioApi.Helpers;
 
 public class ItemQueryObject
 {
-    [AllowedValues(["ItemName", "CreatedAt", "UpdatedAt", "Rating"])]
+    [QueryObjectValidation.AllowedValues(["ItemName", "CreatedAt", "UpdatedAt", "Rating"])]
     public string? SortBy { get; set; } = null; //Key used to sort 
 
     public bool IsDescending { get; set; } = false;

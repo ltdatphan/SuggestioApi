@@ -4,9 +4,9 @@ namespace SuggestioApi.Helpers;
 
 public class ListQueryObject
 {
-    [AllowedValues(["public", "private"])] public string? Access { get; set; } = null;
+    [QueryObjectValidation.AllowedValues(["public", "private"])] public string? Access { get; set; } = null;
 
-    [AllowedValues(["Title", "CreatedAt", "UpdatedAt", "ItemCount"])]
+    [QueryObjectValidation.AllowedValues(["Title", "CreatedAt", "UpdatedAt", "ItemCount"])]
     public string? SortBy { get; set; } = null; //Key used to sort 
 
     public bool IsDescending { get; set; } = false;
