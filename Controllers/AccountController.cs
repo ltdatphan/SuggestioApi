@@ -233,8 +233,9 @@ public class AccountController : ControllerBase
         await _tokenRepo.RevokeToken(user, targetRefreshToken, ipAddress);
 
         RemoveCookie("accessToken");
-         RemoveCookie("refreshToken");
-         RemoveCookie("CSRF-TOKEN");
+        
+        
+         
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -264,7 +265,7 @@ public class AccountController : ControllerBase
         {
             HttpOnly = key == "refreshToken" || key == "accessToken",
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Expires = expires
             // Domain = ".suggestio.local"
         };
@@ -277,7 +278,7 @@ public class AccountController : ControllerBase
         {
             HttpOnly = key == "refreshToken" || key == "accessToken",
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UtcNow.AddDays(-1) // Expire the cookie immediately
         };
 
